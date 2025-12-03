@@ -1,0 +1,86 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Clean Workspace') {
+            steps {
+                cleanWs()
+            }
+        }
+
+        stage('Checkout Source Code') {
+            steps {
+                git branch: 'main', url: 'https://github.com/Ekangaki/Microservices-E-Commerce-EKS-Project.git'
+            }
+        }
+
+        stage('Docker Image Build') {
+            steps {
+                script {
+                    // Navigate to the correct service directory for the Dockerfile
+                    dir('src/loadgenerator') {
+                        // Pruning commands are resource-intensive; consider using dedicated agents or cleanup tools
+                        sh 'docker container prune -f'
+                        sh 'docker build -t loadgenerator .'
+                    }
+                }
+            }
+        }
+
+        stage('ECR Image Push') {
+            steps {
+                script {
+                    sh '''
+                    # Authenticate Docker client to ECR
+                    aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 970547380044.dkr.ecr.us-east-1.amazonaws.com
+
+                    # Tag the image with the unique Jenkins BUILD_NUMBER
+                    docker tag loadgenerator:latest 970547380044.dkr.ecr.us-east-1.amazonaws.com/loadgenerator:${BUILD_NUMBER}
+
+                    # Push the tagged image to ECR
+                    docker push 970547380044.dkr.ecr.us-east-1.amazonaws.com/loadgenerator:${BUILD_NUMBER}
+                    '''
+                }
+            }
+        }
+
+        stage('Update Git Deployment File') {
+            environment {
+                // Define environment variables
+                GIT_REPO_NAME = "Microservices-E-Commerce-EKS-Project"
+                GIT_EMAIL = "georgegedeon2012@gmail.com"
+                GIT_USER_NAME = "Ekangaki"
+                IMAGE_NAME = "loadgenerator"
+                REPO_URL = "970547380044.dkr.ecr.us-east-1.amazonaws.com/loadgenerator"
+                YAML_FILE = "loadgenerator.yaml"
+            }
+            steps {
+                // Navigate to the directory containing the Kubernetes YAML files
+                dir('kubernetes-files') { 
+                    withCredentials([string(credentialsId: 'my-git-pattoken', variable: 'git_token')]) {
+                        sh '''
+                        # Configure git user/email
+                        git config user.email "${GIT_EMAIL}"
+                        git config user.name "${GIT_USER_NAME}"
+
+                        # BUILD_NUMBER is already available from Jenkins environment
+                        echo "Applying image tag: ${REPO_URL}:${BUILD_NUMBER}"
+
+                        # Update the image tag in the YAML file
+                        sed -i "s#image:.*#image: ${REPO_URL}:${BUILD_NUMBER}#g" ${YAML_FILE}
+
+                        # Stage only the specific modified file (Corrected from 'git add .')
+                        git add ${YAML_FILE}
+
+                        # Commit the change. Use '|| true' to IGNORE EXIT CODE 1 if no change was made.
+                        git commit -m "Update ${IMAGE_NAME} Image to version ${BUILD_NUMBER}" || true
+
+                        # Push the commit using the secure token
+                        git push https://${git_token}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:main
+                        '''
+                    }
+                }
+            }
+        }
+    }
+}
