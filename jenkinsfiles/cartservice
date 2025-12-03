@@ -10,7 +10,7 @@ pipeline {
         stage('Checkout Source Code') {
             steps {
                 // Ensure checkout happens at the root of the workspace
-                git branch: 'main', url: 'https://github.com/Ekangaki/Microservices-E-Commerce-EKS-Project.git'
+                git branch: 'main', url: 'https://github.com/Senderilla/Microservices-E-Commerce-Project.git'
             }
         }
         stage('Docker Image Build') {
@@ -46,9 +46,9 @@ pipeline {
         stage('Update Git Deployment File') {
             environment {
                 // Define environment variables for clean configuration
-                GIT_REPO_NAME = "Microservices-E-Commerce-EKS-Project"
-                GIT_EMAIL = "georgegedeon2012@gmail.com"
-                GIT_USER_NAME = "Ekangaki"
+                GIT_REPO_NAME = "Microservices-E-Commerce-Project"
+                GIT_EMAIL = "senderillaesumu@gmail.com"
+                GIT_USER_NAME = "Senderilla"
                 IMAGE_NAME = "cartservice"
                 REPO_URL = "970547380044.dkr.ecr.us-east-1.amazonaws.com/cartservice"
                 YAML_FILE = "cartservice.yaml"
