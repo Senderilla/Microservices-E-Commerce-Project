@@ -76,7 +76,7 @@ variable "instance_type" {
 variable "key_name" {
   description = "EC2 keypair"
   type        = string
-  default     = "Batch5keypair-Office-laptop"
+  default     = "Sendy-key pair(1).pem"
 }
 
 variable "instance_name" {
