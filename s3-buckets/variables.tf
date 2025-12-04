@@ -1,13 +1,13 @@
 variable "bucket1_name" {
   description = "Name of the first S3 bucket"
   type        = string
-  default     = "ekangaki-nguti1"
+  default     = "senderilla-nguti1"
 }
 
 variable "bucket2_name" {
   description = "Name of the second S3 bucket"
   type        = string
-  default     = "ekangaki-nguti2"
+  default     = "senderilla-nguti2"
 }
 
 variable "environment" {
