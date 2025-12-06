@@ -76,7 +76,7 @@ variable "instance_type" {
 variable "key_name" {
   description = "EC2 keypair"
   type        = string
-  default     = "Sendy-key pair(1).pem"
+  default     = "Sendy-key pair"
 }
 
 variable "instance_name" {
